@@ -1,13 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Space+Grotesk:wght@400;500;600;700&display=swap");
 
 :root {
-  --ink: #1c1b1f;
-  --paper: #f5efe7;
-  --accent: #ee6c4d;
-  --accent-dark: #d95338;
-  --sea: #293241;
-  --mist: #e0fbfc;
-  --shadow: rgba(20, 20, 20, 0.12);
+  --ink: #1b1b1b;
+  --paper: #f7f5f0;
+  --accent: #ff6b3d;
+  --accent-dark: #e1582f;
+  --sea: #1f2a44;
+  --mist: #eaf6f7;
+  --shadow: rgba(16, 18, 24, 0.12);
+  --border: #e1e5ea;
+  --panel: #ffffff;
 }
 
 * {
@@ -18,7 +20,8 @@ body {
   margin: 0;
   font-family: "Space Grotesk", "Segoe UI", sans-serif;
   color: var(--ink);
-  background: radial-gradient(circle at top, #fef3e2 0%, #f5efe7 45%, #f0e7dc 100%);
+  background:
+    radial-gradient(circle at top, #fff2e5 0%, #f7f5f0 50%, #f1ede6 100%);
 }
 
 .app {
@@ -33,7 +36,8 @@ body {
   gap: 24px;
   align-items: center;
   padding: 32px;
-  background: linear-gradient(120deg, #ffffff 0%, #f4fbff 45%, #e6f6f7 100%);
+  background:
+    linear-gradient(135deg, #ffffff 0%, #f4f9ff 40%, #e8f7f6 100%);
   border-radius: 24px;
   box-shadow: 0 16px 40px var(--shadow);
   animation: floatIn 700ms ease-out;
@@ -62,6 +66,10 @@ body {
   display: grid;
   gap: 12px;
   min-width: 140px;
+  padding: 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
 }
 
 .stat-label {
@@ -79,7 +87,7 @@ body {
 .panel {
   margin-top: 28px;
   padding: 24px;
-  background: #fff;
+  background: var(--panel);
   border-radius: 20px;
   box-shadow: 0 10px 30px var(--shadow);
 }
@@ -105,10 +113,11 @@ body {
 .player-form input,
 .selectors select {
   padding: 10px 12px;
-  border: 1px solid #cbd4d9;
+  border: 1px solid var(--border);
   border-radius: 10px;
   min-width: 200px;
   font-size: 14px;
+  background: #fff;
 }
 
 button {
@@ -150,16 +159,17 @@ button.primary:hover:enabled {
 .player-card {
   padding: 12px;
   border-radius: 14px;
-  background: #f8f8f8;
+  background: #f9fafb;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-left: 4px solid var(--sea);
+  border: 1px solid var(--border);
 }
 
 .player-card.cpu {
   border-left-color: var(--accent);
-  background: #fff6f3;
+  background: #fff5f1;
 }
 
 .player-name {
@@ -182,9 +192,10 @@ button.primary:hover:enabled {
   display: flex;
   gap: 8px;
   align-items: center;
-  background: #f0f4f6;
+  background: #f1f4f7;
   padding: 8px 12px;
   border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .selectors {
@@ -210,10 +221,12 @@ button.primary:hover:enabled {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f8fbff;
+  background: #f5f9ff;
   color: var(--ink);
   margin-bottom: 8px;
   padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
 }
 
 .game-row.won {
@@ -235,6 +248,10 @@ button.primary:hover:enabled {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  padding: 12px;
+  background: linear-gradient(160deg, #ffffff 0%, #f6fbff 100%);
+  border-radius: 18px;
+  border: 1px solid var(--border);
 }
 
 .status-line {
@@ -253,10 +270,17 @@ button.primary:hover:enabled {
   width: 90px;
   height: 90px;
   font-size: 32px;
-  background: #fff;
+  background: #ffffff;
   border: 2px solid #d6dde1;
   border-radius: 14px;
   color: var(--sea);
+  box-shadow: 0 6px 16px rgba(31, 42, 68, 0.08);
+}
+
+.cell.cpu-move {
+  animation: cpuPulse 700ms ease-out;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(255, 107, 61, 0.15);
 }
 
 .cell:disabled {
@@ -280,6 +304,21 @@ button.primary:hover:enabled {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes cpuPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 107, 61, 0.35);
+  }
+  60% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 10px rgba(255, 107, 61, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 107, 61, 0);
   }
 }
 

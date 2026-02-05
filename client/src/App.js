@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
 
 const emptyBoard = Array(9).fill(null);
@@ -12,13 +12,13 @@ function formatStatus(game, currentName, winnerName) {
   return `Turn: ${game.currentSymbol} (${currentName || "Unknown"})`;
 }
 
-function GameBoard({ board, onMove, disabled }) {
+function GameBoard({ board, onMove, disabled, lastCpuMove }) {
   return (
     <div className="board">
       {board.map((value, index) => (
         <button
           key={index}
-          className="cell"
+          className={`cell ${lastCpuMove === index ? "cpu-move" : ""}`}
           disabled={disabled || Boolean(value)}
           onClick={() => onMove(index)}
           type="button"
@@ -39,6 +39,10 @@ function App() {
   const [playerXId, setPlayerXId] = useState("");
   const [playerOId, setPlayerOId] = useState("");
   const [isBusy, setIsBusy] = useState(false);
+  const [lastCpuMove, setLastCpuMove] = useState(null);
+  const prevBoardRef = useRef(emptyBoard);
+  const cpuStepTimerRef = useRef(null);
+  const cpuStepInFlightRef = useRef(false);
 
   const humanPlayers = useMemo(
     () => players.filter((p) => p.type === "human"),
@@ -61,6 +65,64 @@ function App() {
     fetchPlayers();
     fetchGames();
   }, []);
+
+  useEffect(() => {
+    if (!currentGame) return;
+    const prevBoard = prevBoardRef.current || emptyBoard;
+    const nextBoard = currentGame.board || emptyBoard;
+    let changedIndex = null;
+    for (let i = 0; i < nextBoard.length; i += 1) {
+      if (prevBoard[i] !== nextBoard[i]) {
+        changedIndex = i;
+      }
+    }
+    const cpuSymbols = [];
+    if (currentGame.playerX?.type === "cpu") cpuSymbols.push("X");
+    if (currentGame.playerO?.type === "cpu") cpuSymbols.push("O");
+    prevBoardRef.current = nextBoard.slice();
+    if (changedIndex !== null && cpuSymbols.includes(nextBoard[changedIndex])) {
+      setLastCpuMove(changedIndex);
+      const timer = setTimeout(() => setLastCpuMove(null), 900);
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [currentGame]);
+
+  useEffect(() => {
+    if (cpuStepTimerRef.current) {
+      clearInterval(cpuStepTimerRef.current);
+      cpuStepTimerRef.current = null;
+    }
+    if (!currentGame) return undefined;
+    if (currentGame.mode !== "cpu-cpu") return undefined;
+    if (currentGame.status !== "in_progress") return undefined;
+
+    cpuStepTimerRef.current = setInterval(async () => {
+      if (cpuStepInFlightRef.current) return;
+      cpuStepInFlightRef.current = true;
+      try {
+        const res = await fetch(`/api/games/${currentGame.id}/cpu-step`, {
+          method: "POST",
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setCurrentGame(data);
+          await fetchGames();
+        }
+      } catch (err) {
+        // No-op: keep loop alive
+      } finally {
+        cpuStepInFlightRef.current = false;
+      }
+    }, 700);
+
+    return () => {
+      if (cpuStepTimerRef.current) {
+        clearInterval(cpuStepTimerRef.current);
+        cpuStepTimerRef.current = null;
+      }
+    };
+  }, [currentGame]);
 
   async function createPlayer(e) {
     e.preventDefault();
@@ -311,6 +373,7 @@ function App() {
             board={board}
             disabled={!currentGame || currentGame.status !== "in_progress" || isBusy}
             onMove={playMove}
+            lastCpuMove={lastCpuMove}
           />
           <div className="game-actions">
             <button onClick={resetGame} disabled={!currentGame || isBusy} type="button">

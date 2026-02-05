@@ -93,6 +93,16 @@ function runCpuTurns(game) {
   }
 }
 
+function runCpuTurnOnce(game) {
+  if (game.status !== "in_progress") return false;
+  if (!isCpuTurn(game)) return false;
+  const cpuSymbol = game.currentSymbol;
+  const idx = pickCpuMove(game.board, cpuSymbol);
+  if (idx === undefined || idx === null) return false;
+  takeMove(game, idx, cpuSymbol);
+  return true;
+}
+
 app.get("/api/health", (req, res) => {
   res.json({ ok: true, time: nowIso() });
 });
@@ -176,7 +186,9 @@ app.post("/api/games", (req, res) => {
     lastMoveAt: null,
   };
 
-  runCpuTurns(game);
+  if (mode !== "cpu-cpu") {
+    runCpuTurns(game);
+  }
   games.unshift(game);
   res.status(201).json(serializeGame(game));
 });
@@ -224,7 +236,26 @@ app.post("/api/games/:id/reset", (req, res) => {
   game.winnerSymbol = null;
   game.winnerId = null;
   game.lastMoveAt = null;
-  runCpuTurns(game);
+  if (game.mode !== "cpu-cpu") {
+    runCpuTurns(game);
+  }
+  res.json(serializeGame(game));
+});
+
+app.post("/api/games/:id/cpu-step", (req, res) => {
+  const game = games.find((g) => g.id === req.params.id);
+  if (!game) return res.status(404).json({ error: "Game not found." });
+  if (game.status !== "in_progress") {
+    return res.status(400).json({ error: "Game is over." });
+  }
+  if (!isCpuTurn(game)) {
+    return res.status(400).json({ error: "It is not a CPU turn." });
+  }
+
+  const moved = runCpuTurnOnce(game);
+  if (!moved) {
+    return res.status(400).json({ error: "CPU move failed." });
+  }
   res.json(serializeGame(game));
 });
 
